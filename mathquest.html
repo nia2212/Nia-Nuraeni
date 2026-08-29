@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Mystery Quest - Petualangan Misteri Laboratorium</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135sdeg, #0f172a 0%, #1e1b4b 100%);
+        }
+        .lab-bg {
+            background-color: #090d16;
+            background-image: radial-gradient(#38bdf8 0.4px, transparent 0.4px);
+            background-size: 20px 20px;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(56, 189, 248, 0.6); }
+        }
+        .glow-box {
+            animation: pulseGlow 2.5s infinite;
+        }
+    </style>
+</head>
+<body class="lab-bg min-h-screen flex flex-col items-center justify-center p-4 text-slate-100">
+
+    <div id="app" class="w-full max-w-xl bg-slate-900/90 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border border-cyan-500/30 flex flex-col min-h-[640px]">
+        
+        <!-- Header / Stats Bar -->
+        <header class="bg-gradient-to-r from-cyan-600 to-indigo-600 text-white p-5 flex justify-between items-center shadow-lg border-b border-cyan-500/30">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl">🧪</span>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-wide">Lab Mystery Quest</h1>
+                    <p class="text-xs text-cyan-200">Pecahkan Misteri & Ungkap Formula Rahasia</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 bg-cyan-950/60 px-4 py-2 rounded-2xl border border-cyan-500/40 backdrop-blur-sm">
+                <div class="flex items-center space-x-1">
+                    <span class="text-amber-300">⭐</span>
+                    <span id="score-display" class="font-bold text-sm text-cyan-100">0</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <span class="text-rose-400">❤️</span>
+                    <span id="lives-display" class="font-bold text-sm text-rose-200">3</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Main Content Area -->
+        <main id="main-content" class="p-6 flex-1 flex flex-col justify-between">
+            <!-- Injected via JavaScript -->
+        </main>
+    </div>
+
+    <!-- Custom Modal / Message Box -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-cyan-500/40 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl animate-pop">
+            <div id="modal-icon" class="text-5xl mb-3">🔍</div>
+            <h3 id="modal-title" class="text-xl font-bold text-cyan-200 mb-2">Pemberitahuan Lab</h3>
+            <p id="modal-message" class="text-slate-300 text-sm mb-6 leading-relaxed">Pesan eksperimen di sini.</p>
+            <button onclick="closeModal()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-cyan-600/30 transition-all active:scale-95 cursor-pointer">
+                Lanjutkan Penyelidikan
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game State Management
+        let gameState = {
+            screen: 'home', // 'home', 'puzzle', 'gameover'
+            score: 0,
+            lives: 3,
+            currentLevel: 0,
+            selectedOption: null,
+            isAnswerChecked: false
+        };
+
+        // Puzzles / Levels Datasets
+        const labLevels = [
+            {
+                title: "Level 1: Insiden Tumpahan Cairan",
+                room: "Ruang Utama Kimia",
+                story: "Seorang peneliti tidak sengaja menumpahkan cairan misterius di meja kerja. Cairan tersebut mulai berasap hijau. Manakah tindakan pencegahan keselamatan laboratorium yang paling benar untuk dilakukan pertama kali?",
+                target: "⚠️ Penanganan Darurat",
+                options: [
+                    "Menghisap bau cairan untuk mengidentifikasi unsurnya",
+                    "Menjauhi area dan melaporkan kepada pengawas/pembimbing lab",
+                    "Meniup asap tersebut menggunakan kipas angin biasa",
+                    "Meminum air mineral agar tidak panik"
+                ],
+                answer: "Menjauhi area dan melaporkan kepada pengawas/pembimbing lab",
+                hint: "Keselamatan diri adalah prioritas utama saat terjadi tumpahan bahan kimia tidak dikenal."
+            },
+            {
+                title: "Level 2: Misteri Kunci Meja Observasi",
+                room: "Ruang Spektroskopi",
+                story: "Laci penyimpanan sampel rahasia terkunci dengan kata sandi angka. Sebuah catatan di dinding lab menunjukkan petunjuk: 'Hasil dari 12 ditambah 8, kemudian dibagi 2'. Berapakah angka kombinasi kuncinya?",
+                target: "(12 + 8) ÷ 2 = ?",
+                options: ["10", "15", "20", "8"],
+                answer: "10",
+                hint: "Selesaikan operasi dalam tanda kurung terlebih dahulu, lalu lakukan pembagian."
+            },
+            {
+                title: "Level 3: Formula Larutan Netral",
+                room: "Laboratorium Biokimia",
+                story: "Kamu sedang meracik indikator pH air misterius. Jika kertas lakmus merah berubah menjadi biru dan lakmus biru tetap biru, apa sifat larutan kimia tersebut?",
+                target: "Sifat Larutan Kimia",
+                options: ["Asam kuat", "Basa (Alkalis)", "Netral sempurna", "Minyak murni"],
+                answer: "Basa (Alkalis)",
+                hint: "Lakmus merah yang berubah jadi biru menunjukkan larutan bersifat basa."
+            },
+            {
+                title: "Level 4: Teka-teki Tabung Reaksi",
+                room: "Kamar Pendingin Cryo",
+                story: "Ilmuwan mencampur dua unsur kimia: Hidrogen (H) dan Oksigen (O) dengan perbandingan yang tepat untuk memadamkan api reaktor. Formula senyawa apakah yang terbentuk?",
+                target: "Senyawa Reaksi H + O",
+                options: ["Karbon Dioksida (CO2)", "Air (H2O)", "Garam Dapur (NaCl)", "Gas Nitrogen (N2)"],
+                answer: "Air (H2O)",
+                hint: "Senyawa paling melimpah di bumi yang tersusun dari hidrogen dan oksigen."
+            },
+            {
+                title: "Level 5: Kunci Ruang Arsip Utama",
+                room: "Pintu Utama Lab Rahasia",
+                story: "Tinggal satu langkah lagi untuk mengungkap dokumen rahasia lab. Pertanyaan terakhir: 'Alat laboratorium apa yang digunakan untuk mengukur volume cairan dengan ketelitian sangat tinggi berbentuk silinder panjang bersekala?'",
+                target: "Alat Ukur Volume Presisi",
+                options: ["Gelas Beker", "Tabung Reaksi", "Gelas Ukur (Measuring Cylinder)", "Batang Pengaduk Kaca"],
+                answer: "Gelas Ukur (Measuring Cylinder)",
+                hint: "Alat gelas berbentuk silinder tegak berukuran presisi untuk menakar cairan."
+            }
+        ];
+
+        function render() {
+            const mainContent = document.getElementById('main-content');
+            document.getElementById('score-display').innerText = gameState.score;
+            document.getElementById('lives-display').innerText = gameState.lives;
+
+            if (gameState.screen === 'home') {
+                mainContent.innerHTML = `
+                    <div class="text-center my-auto py-6 animate-pop">
+                        <div class="inline-block p-4 bg-cyan-950/60 rounded-full mb-4 shadow-inner text-5xl glow-box border border-cyan-500/40">🔬</div>
+                        <h2 class="text-2xl font-black text-cyan-100 mb-2">Laboratorium Rahasia Terkunci!</h2>
+                        <p class="text-slate-400 text-sm mb-8 max-w-sm mx-auto">Gunakan logika ilmiah, pengetahuan sains, dan ketelitian untuk memecahkan seluruh teka-teki misteri di dalam lab.</p>
+                        
+                        <div class="space-y-4 max-w-xs mx-auto">
+                            <button onclick="startGame()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-cyan-600/30 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center space-x-3 cursor-pointer">
+                                <span class="text-2xl">🚀</span>
+                                <div class="text-left">
+                                    <div class="text-sm">Mulai Penyelidikan Lab</div>
+                                    <div class="text-xs font-normal text-cyan-200">5 Level Teka-Teki Sains</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-center text-xs text-slate-500 mt-6">Lab Mystery Quest • Interactive UI/UX</div>
+                `;
+            } else if (gameState.screen === 'puzzle') {
+                const lvl = labLevels[gameState.currentLevel];
+                const progressPercent = ((gameState.currentLevel) / labLevels.length) * 100;
+
+                mainContent.innerHTML = `
+                    <div class="w-full animate-pop">
+                        <!-- Progress bar -->
+                        <div class="w-full bg-slate-800 h-2.5 rounded-full mb-5 overflow-hidden border border-slate-700">
+                            <div class="bg-cyan-500 h-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+                        </div>
+
+                        <!-- Room & Question card -->
+                        <div class="bg-slate-950/60 border border-cyan-500/30 rounded-3xl p-5 text-left mb-5 shadow-inner">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-xs font-semibold px-3 py-1 rounded-full">${lvl.room}</span>
+                                <span class="text-xs text-slate-400">Teka-Teki ${gameState.currentLevel + 1} / ${labLevels.length}</span>
+                            </div>
+                            <h3 class="text-cyan-100 font-bold text-base mb-2">${lvl.title}</h3>
+                            <p class="text-slate-300 text-sm mb-4 leading-relaxed">${lvl.story}</p>
+                            <div class="bg-slate-900 p-3 rounded-2xl border border-cyan-500/20 text-center">
+                                <span class="text-xs text-cyan-400 block mb-1">Objek / Pertanyaan:</span>
+                                <span class="text-lg font-black text-white tracking-wide">${lvl.target}</span>
+                            </div>
+                        </div>
+
+                        <!-- Options grid -->
+                        <div class="grid grid-cols-1 gap-2.5 mb-5">
+                            ${lvl.options.map(opt => `
+                                <button onclick="selectOption('${opt.replace(/'/g, "\\'")}')" id="btn-${btoa(opt).replace(/=/g, '')}" class="option-btn text-left bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 text-slate-200 font-medium py-3 px-4 rounded-2xl shadow-sm transition-all text-sm active:scale-95 cursor-pointer flex items-center space-x-3">
+                                    <span class="w-6 h-6 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-xs text-cyan-400">🔹</span>
+                                    <span>${opt}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <!-- Action Button -->
+                        <button id="submit-btn" onclick="submitAnswer()" disabled class="w-full bg-slate-800 text-slate-500 font-bold py-3.5 px-6 rounded-2xl cursor-not-allowed transition-all">
+                            Pilih Jawaban Terlebih Dahulu
+                        </button>
+                    </div>
+                `;
+            } else if (gameState.screen === 'gameover') {
+                const isWin = gameState.currentLevel >= labLevels.length;
+                mainContent.innerHTML = `
+                    <div class="text-center my-auto py-8 animate-pop">
+                        <div class="text-7xl mb-4">${isWin ? '🏆' : '💀'}</div>
+                        <h2 class="text-2xl font-black text-cyan-100 mb-2">${isWin ? 'Misteri Lab Berhasil Diungkap!' : 'Penyelidikan Gagal!'}</h2>
+                        <p class="text-slate-400 text-sm mb-6">${isWin ? 'Hebat! Kamu berhasil mengamankan seluruh formula rahasia dan menyelamatkan laboratorium.' : 'Kamu kehabisan nyawa akibat salah menganalisis bahan kimia. Coba selidiki ulang dari awal!'}</p>
+                        
+                        <div class="bg-slate-950 rounded-2xl p-4 max-w-xs mx-auto mb-8 border border-cyan-500/30 flex justify-around shadow-inner">
+                            <div>
+                                <div class="text-xs text-slate-400">Skor Akhir</div>
+                                <div class="text-2xl font-black text-cyan-400">${gameState.score}</div>
+                            </div>
+                            <div class="border-r border-slate-800"></div>
+                            <div>
+                                <div class="text-xs text-slate-400">Status</div>
+                                <div class="text-base font-bold text-white">${isWin ? 'Berhasil 🎉' : 'Terkunci ⚡'}</div>
+                            </div>
+                        </div>
+
+                        <button onclick="resetGame()" class="w-full max-w-xs bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-cyan-600/30 transition-all active:scale-95 cursor-pointer">
+                            Mulai Penyelidikan Baru
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function startGame() {
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.currentLevel = 0;
+            gameState.screen = 'puzzle';
+            render();
+        }
+
+        function selectOption(option) {
+            if (gameState.isAnswerChecked) return;
+            gameState.selectedOption = option;
+            
+            // Highlight selected option button
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.classList.remove('border-cyan-500', 'bg-cyan-950/60', 'text-cyan-100');
+                btn.classList.add('border-slate-700', 'bg-slate-900', 'text-slate-200');
+            });
+
+            const btnId = 'btn-' + btoa(option).replace(/=/g, '');
+            const selectedBtn = document.getElementById(btnId);
+            if (selectedBtn) {
+                selectedBtn.classList.remove('border-slate-700', 'bg-slate-900', 'text-slate-200');
+                selectedBtn.classList.add('border-cyan-500', 'bg-cyan-950/60', 'text-cyan-100');
+            }
+
+            // Enable submit button
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('bg-slate-800', 'text-slate-500', 'cursor-not-allowed');
+            submitBtn.classList.add('bg-cyan-600', 'hover:bg-cyan-500', 'text-white', 'shadow-lg', 'shadow-cyan-600/30', 'cursor-pointer');
+            submitBtn.innerText = "Konfirmasi Analisis";
+        }
+
+        function submitAnswer() {
+            if (!gameState.selectedOption || gameState.isAnswerChecked) return;
+            gameState.isAnswerChecked = true;
+
+            const lvl = labLevels[gameState.currentLevel];
+            const isCorrect = gameState.selectedOption === lvl.answer;
+            const btnId = 'btn-' + btoa(gameState.selectedOption).replace(/=/g, '');
+            const selectedBtn = document.getElementById(btnId);
+            
+            if (isCorrect) {
+                if (selectedBtn) {
+                    selectedBtn.classList.remove('border-cyan-500', 'bg-cyan-950/60', 'text-cyan-100');
+                    selectedBtn.classList.add('border-emerald-500', 'bg-emerald-950', 'text-emerald-200');
+                }
+                gameState.score += 20;
+                showModal('Analisis Benar! 🔍', 'Petunjuk berhasil dipecahkan dengan akurat!', true);
+            } else {
+                if (selectedBtn) {
+                    selectedBtn.classList.remove('border-cyan-500', 'bg-cyan-950/60', 'text-cyan-100');
+                    selectedBtn.classList.add('border-rose-500', 'bg-rose-950', 'text-rose-200');
+                }
+                
+                // Highlight correct button
+                const correctBtnId = 'btn-' + btoa(lvl.answer).replace(/=/g, '');
+                const correctBtn = document.getElementById(correctBtnId);
+                if (correctBtn) {
+                    correctBtn.classList.remove('border-slate-700', 'bg-slate-900', 'text-slate-200');
+                    correctBtn.classList.add('border-emerald-500', 'bg-emerald-950', 'text-emerald-200');
+                }
+
+                gameState.lives -= 1;
+                showModal('Analisis Keliru! ⚠️', `Jawaban yang tepat adalah: <b>${lvl.answer}</b><br><br><i>💡 ${lvl.hint}</i>`, false);
+            }
+        }
+
+        function showModal(title, message, isSuccess) {
+            document.getElementById('modal-icon').innerText = isSuccess ? '✨' : '❌';
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerHTML = message;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+            gameState.isAnswerChecked = false;
+            gameState.selectedOption = null;
+
+            if (gameState.lives <= 0) {
+                gameState.screen = 'gameover';
+            } else {
+                gameState.currentLevel++;
+                if (gameState.currentLevel >= labLevels.length) {
+                    gameState.screen = 'gameover';
+                } else {
+                    gameState.screen = 'puzzle';
+                }
+            }
+            render();
+        }
+
+        function resetGame() {
+            gameState.screen = 'home';
+            render();
+        }
+
+        // Initialize application on window load
+        window.onload = function() {
+            render();
+        };
+    </script>
+</body>
+</html>
