@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NihongoMaster — Belajar Bahasa Jepang</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            colors: {
+                jpRed: '#DC2626',
+                sakura: '#FBCFE8'
+            }
+        }
+    }
+}
+</script>
+<style>
+    .perspective-1000 { perspective: 1200px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden {
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 { transform: rotateY(180deg); }
+    #flashcard-inner.flipped { transform: rotateY(180deg); }
+    .kana-card:active { transform: scale(0.95); }
+</style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+
+<!-- HEADER -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-lg bg-jpRed text-white flex items-center justify-center font-bold">
+                    日
+                </div>
+                <span class="text-lg font-extrabold tracking-tight">Nihongo<span class="text-jpRed">Master</span></span>
+            </div>
+
+            <!-- Navigation Tabs (Desktop) -->
+            <nav class="hidden md:flex items-center space-x-2">
+                <button onclick="switchTab('kana')" id="nav-kana" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-jpRed text-white">
+                    <i class="fa-solid me-1 fa-font"></i> Hiragana & Katakana
+                </button>
+                <button onclick="switchTab('vocab')" id="nav-vocab" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-colors text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid me-1 fa-book"></i> Kosakata
+                </button>
+                <button onclick="switchTab('flashcards')" id="nav-flashcards" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-colors text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid me-1 fa-clone"></i> Flashcard
+                </button>
+                <button onclick="switchTab('quiz')" id="nav-quiz" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-colors text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid me-1 fa-gamepad"></i> Kuis Interaktif
+                </button>
+                <button onclick="toggleFullscreen()" title="Layar Penuh" aria-label="Aktifkan layar penuh" class="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors border border-slate-200 ml-2">
+                    <i id="fullscreen-icon" class="fa-solid fa-expand"></i>
+                </button>
+            </nav>
+
+            <!-- Mobile Menu & Fullscreen Button -->
+            <div class="flex items-center gap-2 md:hidden">
+                <button onclick="toggleFullscreen()" title="Layar Penuh" aria-label="Aktifkan layar penuh" class="text-slate-600 p-2 rounded-lg hover:bg-slate-100 focus:outline-none border border-slate-200">
+                    <i id="fullscreen-icon-mobile" class="fa-solid fa-expand text-lg"></i>
+                </button>
+                <button id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Buka menu navigasi" class="text-slate-600 p-2 rounded-lg hover:bg-slate-100 focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation Menu -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2 shadow-lg">
+        <button id="nav-mobile-kana" onclick="switchTab('kana'); toggleMobileMenu()" class="mobile-nav-btn w-full text-left px-3 py-2 rounded-md font-medium bg-red-50 text-jpRed">
+            <i class="fa-solid fa-font w-6"></i> Hiragana & Katakana
+        </button>
+        <button id="nav-mobile-vocab" onclick="switchTab('vocab'); toggleMobileMenu()" class="mobile-nav-btn w-full text-left px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100">
+            <i class="fa-solid fa-book w-6"></i> Kosakata
+        </button>
+        <button id="nav-mobile-flashcards" onclick="switchTab('flashcards'); toggleMobileMenu()" class="mobile-nav-btn w-full text-left px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100">
+            <i class="fa-solid fa-clone w-6"></i> Flashcard
+        </button>
+        <button id="nav-mobile-quiz" onclick="switchTab('quiz'); toggleMobileMenu()" class="mobile-nav-btn w-full text-left px-3 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100">
+            <i class="fa-solid fa-gamepad w-6"></i> Kuis Interaktif
+        </button>
+    </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-grow w-full">
+
+    <!-- SECTION 1: KANA GRID -->
+    <section id="section-kana" class="tab-content block">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Tabel Karakter Kana</h2>
+                <p class="text-slate-600 text-xs sm:text-sm">Klik kartu karakter untuk mendengarkan pengucapan (Audio TTS).</p>
+            </div>
+            <div class="inline-flex p-1 bg-slate-200 rounded-xl w-full sm:w-auto">
+                <button id="btn-hiragana" onclick="setKanaType('hiragana')" class="flex-1 sm:flex-initial px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white shadow-sm text-jpRed transition-all text-center">
+                    Hiragana (ひらがな)
+                </button>
+                <button id="btn-katakana" onclick="setKanaType('katakana')" class="flex-1 sm:flex-initial px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-all text-center">
+                    Katakana (カタカナ)
+                </button>
+            </div>
+        </div>
+        <div id="kana-grid" class="grid grid-cols-4 min-[400px]:grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-3"></div>
+    </section>
+
+    <!-- SECTION 2: VOCAB -->
+    <section id="section-vocab" class="tab-content hidden">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Daftar Kosakata Sehari-hari</h2>
+                <p class="text-slate-600 text-xs sm:text-sm">Pelajari kata-kata penting yang sering digunakan dalam percakapan.</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <div class="relative w-full sm:w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="vocab-search" oninput="filterVocabDebounced()" placeholder="Cari kata atau arti..." class="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-jpRed text-sm">
+                </div>
+                <select id="vocab-category" onchange="filterVocab()" class="py-2 px-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-jpRed text-sm bg-white">
+                    <option value="all">Semua Kategori</option>
+                    <option value="salam">Salam & Sapaan</option>
+                    <option value="angka">Angka (1-10)</option>
+                    <option value="keluarga">Keluarga</option>
+                    <option value="makanan">Makanan & Minuman</option>
+                </select>
+            </div>
+        </div>
+        <div id="vocab-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"></div>
+        <div id="vocab-empty" class="hidden text-center text-slate-500 py-10">
+            <i class="fa-solid fa-magnifying-glass text-3xl mb-3"></i>
+            <p>Tidak ada kosakata yang cocok dengan pencarian.</p>
+        </div>
+    </section>
+
+    <!-- SECTION 3: FLASHCARDS -->
+    <section id="section-flashcards" class="tab-content hidden">
+        <div class="max-w-xl mx-auto text-center px-2">
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Flashcard Latihan</h2>
+            <p class="text-slate-600 text-xs sm:text-sm mb-6">Klik pada kartu untuk melihat arti / baliknya.</p>
+
+            <div class="perspective-1000 w-full h-64 sm:h-72 cursor-pointer mb-6" onclick="flipFlashcard()">
+                <div id="flashcard-inner" class="relative w-full h-full transform-style-3d transition-transform duration-500 rounded-2xl shadow-xl bg-white border border-slate-200">
+                    <!-- Front -->
+                    <div class="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br from-red-50 to-white border-2 border-red-100">
+                        <span id="fc-category" class="text-xs font-semibold px-3 py-1 bg-red-100 text-jpRed rounded-full mb-3 sm:mb-4">Kategori</span>
+                        <span id="fc-japanese" class="text-4xl sm:text-6xl font-bold text-slate-800 mb-2"></span>
+                        <span id="fc-romaji" class="text-base sm:text-lg text-slate-500 font-medium"></span>
+                        <span class="text-xs text-slate-400 mt-4 sm:mt-6"><i class="fa-solid fa-rotate me-1"></i> Klik untuk membalik</span>
+                    </div>
+                    <!-- Back -->
+                    <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-900 text-white">
+                        <span class="text-xs sm:text-sm font-medium text-slate-400 mb-2">Arti Bahasa Indonesia:</span>
+                        <span id="fc-meaning" class="text-2xl sm:text-3xl font-bold text-sakura mb-4 text-center"></span>
+                        <button onclick="event.stopPropagation(); playAudio(document.getElementById('fc-japanese').textContent.trim())" class="px-4 py-2 bg-jpRed hover:bg-red-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition-colors">
+                            <i class="fa-solid fa-volume-high me-1"></i> Dengarkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between sm:justify-center items-center gap-2 sm:gap-4">
+                <button onclick="prevFlashcard()" class="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 shadow-sm text-xs sm:text-sm transition-all">
+                    <i class="fa-solid fa-arrow-left me-1 sm:me-2"></i> Sebelum
+                </button>
+                <span id="fc-counter" class="text-xs sm:text-sm font-bold text-slate-500 min-w-[60px] text-center">1 / 10</span>
+                <button onclick="nextFlashcard()" class="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 bg-jpRed hover:bg-red-700 text-white rounded-xl font-semibold shadow-sm text-xs sm:text-sm transition-all">
+                    Lanjut <i class="fa-solid fa-arrow-right ms-1 sm:ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 4: QUIZ -->
+    <section id="section-quiz" class="tab-content hidden">
+        <div class="max-w-2xl mx-auto">
+            <!-- Start -->
+            <div id="quiz-start" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-md text-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-red-100 text-jpRed rounded-2xl flex items-center justify-center mx-auto text-2xl sm:text-3xl mb-4">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Uji Kemampuan Bahasa Jepangmu!</h2>
+                <p class="text-slate-600 mb-6 text-xs sm:text-sm">Jawab 5 pertanyaan pilihan ganda untuk menguji pemahaman Hiragana, Katakana, dan Kosakata kamu.</p>
+                <button onclick="startQuiz()" class="w-full sm:w-auto px-8 py-3 bg-jpRed hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-200 transition-all text-sm sm:text-base">
+                    Mulai Kuis Sekarang
+                </button>
+            </div>
+
+            <!-- Play -->
+            <div id="quiz-body" class="hidden bg-white rounded-2xl p-5 sm:p-8 border border-slate-200 shadow-md">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="quiz-progress-text" class="text-xs font-bold text-jpRed uppercase tracking-wider">Pertanyaan 1 dari 5</span>
+                    <span id="quiz-score-display" class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                        <i class="fa-solid fa-star me-1"></i> Skor: <span id="quiz-score">0</span>
+                    </span>
+                </div>
+                <div class="w-full bg-slate-100 h-2 rounded-full mb-6 overflow-hidden">
+                    <div id="quiz-progress-bar" class="bg-jpRed h-full w-1/5 transition-all duration-300"></div>
+                </div>
+
+                <h3 id="quiz-question" class="text-lg sm:text-xl font-bold text-slate-800 mb-6">Pertanyaan...</h3>
+                <div id="quiz-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"></div>
+
+                <div class="flex justify-end">
+                    <button id="quiz-next-btn" onclick="nextQuestion()" disabled class="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl text-xs sm:text-sm transition-all text-center">
+                        Pertanyaan Berikutnya <i class="fa-solid fa-chevron-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div id="quiz-result" class="hidden bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-md text-center">
+                <div id="result-icon" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto text-3xl sm:text-4xl mb-4"></div>
+                <h2 id="result-title" class="text-xl sm:text-2xl font-bold text-slate-900 mb-2"></h2>
+                <p id="result-desc" class="text-slate-600 mb-6 text-xs sm:text-sm"></p>
+                <div class="bg-slate-50 p-4 rounded-xl mb-6 inline-block w-full max-w-xs">
+                    <span class="text-xs text-slate-400 block mb-1">Skor Akhir Anda</span>
+                    <span id="result-score" class="text-3xl sm:text-4xl font-extrabold text-jpRed">0</span>
+                </div>
+                <div>
+                    <button onclick="startQuiz()" class="w-full sm:w-auto px-6 py-3 bg-jpRed hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition-all text-sm">
+                        Coba Lagi <i class="fa-solid fa-rotate-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="bg-white border-t border-slate-200 py-4 sm:py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-xs sm:text-sm">
+        <p>© 2026 NihongoMaster — Dibuat untuk belajar Bahasa Jepang secara efisien.</p>
+    </div>
+</footer>
+
+<script>
+/* =====================================================
+   DATA: HIRAGANA & KATAKANA
+   ===================================================== */
+const hiraganaData = [
+    { char: 'あ', romaji: 'a' }, { char: 'い', romaji: 'i' }, { char: 'う', romaji: 'u' }, { char: 'え', romaji: 'e' }, { char: 'お', romaji: 'o' },
+    { char: 'か', romaji: 'ka' }, { char: 'き', romaji: 'ki' }, { char: 'く', romaji: 'ku' }, { char: 'け', romaji: 'ke' }, { char: 'こ', romaji: 'ko' },
+    { char: 'さ', romaji: 'sa' }, { char: 'し', romaji: 'shi' }, { char: 'す', romaji: 'su' }, { char: 'せ', romaji: 'se' }, { char: 'そ', romaji: 'so' },
+    { char: 'た', romaji: 'ta' }, { char: 'ち', romaji: 'chi' }, { char: 'つ', romaji: 'tsu' }, { char: 'て', romaji: 'te' }, { char: 'と', romaji: 'to' },
+    { char: 'な', romaji: 'na' }, { char: 'に', romaji: 'ni' }, { char: 'ぬ', romaji: 'nu' }, { char: 'ね', romaji: 'ne' }, { char: 'の', romaji: 'no' },
+    { char: 'は', romaji: 'ha' }, { char: 'ひ', romaji: 'hi' }, { char: 'ふ', romaji: 'fu' }, { char: 'へ', romaji: 'he' }, { char: 'ほ', romaji: 'ho' },
+    { char: 'ま', romaji: 'ma' }, { char: 'み', romaji: 'mi' }, { char: 'む', romaji: 'mu' }, { char: 'め', romaji: 'me' }, { char: 'も', romaji: 'mo' },
+    { char: 'や', romaji: 'ya' }, { char: 'ゆ', romaji: 'yu' }, { char: 'よ', romaji: 'yo' },
+    { char: 'ら', romaji: 'ra' }, { char: 'り', romaji: 'ri' }, { char: 'る', romaji: 'ru' }, { char: 'れ', romaji: 're' }, { char: 'ろ', romaji: 'ro' },
+    { char: 'わ', romaji: 'wa' }, { char: 'を', romaji: 'wo' }, { char: 'ん', romaji: 'n' }
+];
+
+const katakanaData = [
+    { char: 'ア', romaji: 'a' }, { char: 'イ', romaji: 'i' }, { char: 'ウ', romaji: 'u' }, { char: 'エ', romaji: 'e' }, { char: 'オ', romaji: 'o' },
+    { char: 'カ', romaji: 'ka' }, { char: 'キ', romaji: 'ki' }, { char: 'ク', romaji: 'ku' }, { char: 'ケ', romaji: 'ke' }, { char: 'コ', romaji: 'ko' },
+    { char: 'サ', romaji: 'sa' }, { char: 'シ', romaji: 'shi' }, { char: 'ス', romaji: 'su' }, { char: 'セ', romaji: 'se' }, { char: 'ソ', romaji: 'so' },
+    { char: 'タ', romaji: 'ta' }, { char: 'チ', romaji: 'chi' }, { char: 'ツ', romaji: 'tsu' }, { char: 'テ', romaji: 'te' }, { char: 'ト', romaji: 'to' },
+    { char: 'ナ', romaji: 'na' }, { char: 'ニ', romaji: 'ni' }, { char: 'ヌ', romaji: 'nu' }, { char: 'ネ', romaji: 'ne' }, { char: 'ノ', romaji: 'no' },
+    { char: 'ハ', romaji: 'ha' }, { char: 'ヒ', romaji: 'hi' }, { char: 'フ', romaji: 'fu' }, { char: 'ヘ', romaji: 'he' }, { char: 'ホ', romaji: 'ho' },
+    { char: 'マ', romaji: 'ma' }, { char: 'ミ', romaji: 'mi' }, { char: 'ム', romaji: 'mu' }, { char: 'メ', romaji: 'me' }, { char: 'モ', romaji: 'mo' },
+    { char: 'ヤ', romaji: 'ya' }, { char: 'ユ', romaji: 'yu' }, { char: 'ヨ', romaji: 'yo' },
+    { char: 'ラ', romaji: 'ra' }, { char: 'リ', romaji: 'ri' }, { char: 'ル', romaji: 'ru' }, { char: 'レ', romaji: 're' }, { char: 'ロ', romaji: 'ro' },
+    { char: 'ワ', romaji: 'wa' }, { char: 'ヲ', romaji: 'wo' }, { char: 'ン', romaji: 'n' }
+];
+
+/* =====================================================
+   DATA: VOCABULARY
+   ===================================================== */
+const vocabData = [
+    // Salam & Sapaan
+    { jp: 'こんにちは', romaji: 'konnichiwa', meaning: 'Selamat siang', category: 'salam' },
+    { jp: 'おはよう', romaji: 'ohayou', meaning: 'Selamat pagi', category: 'salam' },
+    { jp: 'こんばんは', romaji: 'konbanwa', meaning: 'Selamat malam', category: 'salam' },
+    { jp: 'さようなら', romaji: 'sayounara', meaning: 'Selamat tinggal', category: 'salam' },
+    { jp: 'ありがとう', romaji: 'arigatou', meaning: 'Terima kasih', category: 'salam' },
+    { jp: 'すみません', romaji: 'sumimasen', meaning: 'Maaf / Permisi', category: 'salam' },
+    { jp: 'はい', romaji: 'hai', meaning: 'Ya', category: 'salam' },
+    { jp: 'いいえ', romaji: 'iie', meaning: 'Tidak', category: 'salam' },
+
+    // Angka 1-10
+    { jp: 'いち', romaji: 'ichi', meaning: 'Satu (1)', category: 'angka' },
+    { jp: 'に', romaji: 'ni', meaning: 'Dua (2)', category: 'angka' },
+    { jp: 'さん', romaji: 'san', meaning: 'Tiga (3)', category: 'angka' },
+    { jp: 'よん', romaji: 'yon', meaning: 'Empat (4)', category: 'angka' },
+    { jp: 'ご', romaji: 'go', meaning: 'Lima (5)', category: 'angka' },
+    { jp: 'ろく', romaji: 'roku', meaning: 'Enam (6)', category: 'angka' },
+    { jp: 'なな', romaji: 'nana', meaning: 'Tujuh (7)', category: 'angka' },
+    { jp: 'はち', romaji: 'hachi', meaning: 'Delapan (8)', category: 'angka' },
+    { jp: 'きゅう', romaji: 'kyuu', meaning: 'Sembilan (9)', category: 'angka' },
+    { jp: 'じゅう', romaji: 'juu', meaning: 'Sepuluh (10)', category: 'angka' },
+
+    // Keluarga
+    { jp: 'おかあさん', romaji: 'okaasan', meaning: 'Ibu', category: 'keluarga' },
+    { jp: 'おとうさん', romaji: 'otousan', meaning: 'Ayah', category: 'keluarga' },
+    { jp: 'あに', romaji: 'ani', meaning: 'Kakak laki-laki', category: 'keluarga' },
+    { jp: 'あね', romaji: 'ane', meaning: 'Kakak perempuan', category: 'keluarga' },
+    { jp: 'おとうと', romaji: 'otouto', meaning: 'Adik laki-laki', category: 'keluarga' },
+    { jp: 'いもうと', romaji: 'imouto', meaning: 'Adik perempuan', category: 'keluarga' },
+    { jp: 'かぞく', romaji: 'kazoku', meaning: 'Keluarga', category: 'keluarga' },
+
+    // Makanan & Minuman
+    { jp: 'ごはん', romaji: 'gohan', meaning: 'Nasi', category: 'makanan' },
+    { jp: 'みず', romaji: 'mizu', meaning: 'Air', category: 'makanan' },
+    { jp: 'おちゃ', romaji: 'ocha', meaning: 'Teh', category: 'makanan' },
+    { jp: 'コーヒー', romaji: 'koohii', meaning: 'Kopi', category: 'makanan' },
+    { jp: 'パン', romaji: 'pan', meaning: 'Roti', category: 'makanan' },
+    { jp: 'さかな', romaji: 'sakana', meaning: 'Ikan', category: 'makanan' },
+    { jp: 'にく', romaji: 'niku', meaning: 'Daging', category: 'makanan' },
+    { jp: 'やさい', romaji: 'yasai', meaning: 'Sayur', category: 'makanan' }
+];
+
+/* =====================================================
+   DATA: QUIZ POOL
+   ===================================================== */
+const quizPool = [
+    { q: 'Apa arti dari こんにちは (konnichiwa)?', opts: ['Selamat pagi', 'Selamat siang', 'Selamat malam', 'Selamat tinggal'], correct: 1 },
+    { q: 'Karakter あ (hiragana) dibaca sebagai?', opts: ['a', 'i', 'u', 'e'], correct: 0 },
+    { q: 'Karakter カ (katakana) dibaca sebagai?', opts: ['ka', 'ki', 'ku', 'ke'], correct: 0 },
+    { q: 'Apa arti dari ありがとう (arigatou)?', opts: ['Maaf', 'Terima kasih', 'Sampai jumpa', 'Halo'], correct: 1 },
+    { q: 'Angka さん (san) berarti?', opts: ['Satu', 'Dua', 'Tiga', 'Empat'], correct: 2 },
+    { q: 'Apa arti dari おかあさん (okaasan)?', opts: ['Ayah', 'Ibu', 'Kakak', 'Adik'], correct: 1 },
+    { q: 'Karakter し (hiragana) dibaca sebagai?', opts: ['sa', 'shi', 'su', 'se'], correct: 1 },
+    { q: 'Apa arti dari みず (mizu)?', opts: ['Nasi', 'Air', 'Teh', 'Kopi'], correct: 1 },
+    { q: 'Karakter シ (katakana) dibaca sebagai?', opts: ['sa', 'shi', 'su', 'so'], correct: 1 },
+    { q: 'Angka じゅう (juu) berarti?', opts: ['Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'], correct: 2 },
+    { q: 'Apa arti dari さようなら (sayounara)?', opts: ['Halo', 'Selamat tinggal', 'Terima kasih', 'Maaf'], correct: 1 },
+    { q: 'Karakter つ (hiragana) dibaca sebagai?', opts: ['ta', 'chi', 'tsu', 'te'], correct: 2 },
+    { q: 'Apa arti dari ごはん (gohan)?', opts: ['Roti', 'Nasi', 'Ikan', 'Daging'], correct: 1 },
+    { q: 'Karakter ン (katakana) dibaca sebagai?', opts: ['na', 'ni', 'n', 'nu'], correct: 2 },
+    { q: 'Apa arti dari かぞく (kazoku)?', opts: ['Kakak', 'Adik', 'Keluarga', 'Tetangga'], correct: 2 }
+];
+
+/* =====================================================
+   STATE
+   ===================================================== */
+let currentKanaType = 'hiragana';
+let currentFlashcardIndex = 0;
+let isFlashcardFlipped = false;
+let currentQuizIndex = 0;
+let quizScore = 0;
+let selectedOptionIndex = null;
+let quizQuestions = [];
+const QUIZ_LENGTH = 5;
+
+/* =====================================================
+   TAB SWITCHING
+   ===================================================== */
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+    const target = document.getElementById(`section-${tab}`);
+    if (target) target.classList.remove('hidden');
+
+    // Desktop nav
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-jpRed', 'text-white');
+        btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+    });
+    const desktopBtn = document.getElementById(`nav-${tab}`);
+    if (desktopBtn) {
+        desktopBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+        desktopBtn.classList.add('bg-jpRed', 'text-white');
+    }
+
+    // Mobile nav
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        btn.classList.remove('bg-red-50', 'text-jpRed');
+        btn.classList.add('text-slate-700', 'hover:bg-slate-100');
+    });
+    const mobileBtn = document.getElementById(`nav-mobile-${tab}`);
+    if (mobileBtn) {
+        mobileBtn.classList.remove('text-slate-700', 'hover:bg-slate-100');
+        mobileBtn.classList.add('bg-red-50', 'text-jpRed');
+    }
+}
+
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    menu.classList.toggle('hidden');
+}
+
+/* =====================================================
+   AUDIO (Web Speech API)
+   ===================================================== */
+function playAudio(text) {
+    if (!text || !('speechSynthesis' in window)) {
+        console.warn('Text-to-Speech tidak didukung browser ini.');
+        return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+}
+
+/* =====================================================
+   FULLSCREEN (Cross-browser)
+   ===================================================== */
+function getFullscreenElement() {
+    return document.fullscreenElement ||
+           document.webkitFullscreenElement ||
+           document.mozFullScreenElement ||
+           document.msFullscreenElement ||
+           null;
+}
+
+function toggleFullscreen() {
+    const elem = document.documentElement;
+    if (!getFullscreenElement()) {
+        const request = elem.requestFullscreen ||
+                        elem.webkitRequestFullscreen ||
+                        elem.mozRequestFullScreen ||
+                        elem.msRequestFullscreen;
+        if (!request) {
+            console.warn('Fullscreen API tidak didukung.');
+            return;
+        }
+        const result = request.call(elem);
+        if (result && typeof result.catch === 'function') {
+            result.catch(err => console.error('Gagal fullscreen:', err.message));
+        }
+    } else {
+        const exit = document.exitFullscreen ||
+                     document.webkitExitFullscreen ||
+                     document.mozCancelFullScreen ||
+                     document.msExitFullscreen;
+        if (exit) exit.call(document);
+    }
+}
+
+function updateFullscreenIcons() {
+    const isFs = !!getFullscreenElement();
+    const iconDesktop = document.getElementById('fullscreen-icon');
+    const iconMobile  = document.getElementById('fullscreen-icon-mobile');
+    [iconDesktop, iconMobile].forEach(icon => {
+        if (!icon) return;
+        icon.classList.toggle('fa-expand', !isFs);
+        icon.classList.toggle('fa-compress', isFs);
+    });
+}
+
+['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
+    .forEach(evt => document.addEventListener(evt, updateFullscreenIcons));
+
+/* =====================================================
+   KANA SECTION
+   ===================================================== */
+function setKanaType(type) {
+    currentKanaType = type;
+    const btnH = document.getElementById('btn-hiragana');
+    const btnK = document.getElementById('btn-katakana');
+
+    if (type === 'hiragana') {
+        btnH.classList.add('bg-white', 'shadow-sm', 'text-jpRed');
+        btnH.classList.remove('text-slate-600');
+        btnK.classList.remove('bg-white', 'shadow-sm', 'text-jpRed');
+        btnK.classList.add('text-slate-600', 'hover:text-slate-900');
+    } else {
+        btnK.classList.add('bg-white', 'shadow-sm', 'text-jpRed');
+        btnK.classList.remove('text-slate-600');
+        btnH.classList.remove('bg-white', 'shadow-sm', 'text-jpRed');
+        btnH.classList.add('text-slate-600', 'hover:text-slate-900');
+    }
+    renderKanaGrid();
+}
+
+function renderKanaGrid() {
+    const grid = document.getElementById('kana-grid');
+    const data = currentKanaType === 'hiragana' ? hiraganaData : katakanaData;
+
+    grid.innerHTML = data.map(item => `
+        <button
+            onclick="playAudio('${item.char}')"
+            class="kana-card group aspect-square bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center shadow-sm hover:shadow-md hover:border-jpRed hover:bg-red-50 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-jpRed">
+            <span class="text-2xl sm:text-3xl font-bold text-slate-800 group-hover:text-jpRed">${item.char}</span>
+            <span class="text-[10px] sm:text-xs text-slate-500 mt-0.5">${item.romaji}</span>
+        </button>
+    `).join('');
+}
+
+/* =====================================================
+   VOCABULARY SECTION
+   ===================================================== */
+let vocabFilterTimer;
+function filterVocabDebounced() {
+    clearTimeout(vocabFilterTimer);
+    vocabFilterTimer = setTimeout(filterVocab, 200);
+}
+
+function filterVocab() {
+    const search = (document.getElementById('vocab-search').value || '').toLowerCase().trim();
+    const category = document.getElementById('vocab-category').value;
+
+    const filtered = vocabData.filter(v => {
+        const matchCat = category === 'all' || v.category === category;
+        const matchSearch = !search ||
+            v.jp.includes(search) ||
+            v.romaji.toLowerCase().includes(search) ||
+            v.meaning.toLowerCase().includes(search);
+        return matchCat && matchSearch;
+    });
+
+    const grid = document.getElementById('vocab-grid');
+    const empty = document.getElementById('vocab-empty');
+
+    if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+
+    const categoryLabel = {
+        salam: 'Salam',
+        angka: 'Angka',
+        keluarga: 'Keluarga',
+        makanan: 'Makanan'
+    };
+
+    grid.innerHTML = filtered.map(v => `
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start mb-2">
+                <span class="text-2xl font-bold text-slate-800">${v.jp}</span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 bg-red-100 text-jpRed rounded-full whitespace-nowrap">
+                    ${categoryLabel[v.category] || v.category}
+                </span>
+            </div>
+            <p class="text-sm text-slate-500 mb-1 italic">${v.romaji}</p>
+            <p class="text-sm text-slate-700 font-medium">${v.meaning}</p>
+            <button onclick="playAudio('${v.jp}')" class="mt-3 text-xs text-jpRed hover:text-red-700 font-semibold transition-colors" aria-label="Dengarkan ${v.jp}">
+                <i class="fa-solid fa-volume-high me-1"></i> Dengarkan
+            </button>
+        </div>
+    `).join('');
+}
+
+/* =====================================================
+   FLASHCARD SECTION
+   ===================================================== */
+function renderFlashcard() {
+    const vocab = vocabData[currentFlashcardIndex];
+    if (!vocab) return;
+
+    const categoryLabel = {
+        salam: 'Salam',
+        angka: 'Angka',
+        keluarga: 'Keluarga',
+        makanan: 'Makanan'
+    };
+
+    document.getElementById('fc-category').textContent = categoryLabel[vocab.category] || vocab.category;
+    document.getElementById('fc-japanese').textContent = vocab.jp;
+    document.getElementById('fc-romaji').textContent = vocab.romaji;
+    document.getElementById('fc-meaning').textContent = vocab.meaning;
+    document.getElementById('fc-counter').textContent =
+        `${currentFlashcardIndex + 1} / ${vocabData.length}`;
+
+    resetFlashcardFlip();
+}
+
+function resetFlashcardFlip() {
+    isFlashcardFlipped = false;
+    document.getElementById('flashcard-inner').classList.remove('flipped');
+}
+
+function flipFlashcard() {
+    isFlashcardFlipped = !isFlashcardFlipped;
+    const inner = document.getElementById('flashcard-inner');
+    inner.classList.toggle('flipped', isFlashcardFlipped);
+}
+
+function nextFlashcard() {
+    currentFlashcardIndex = (currentFlashcardIndex + 1) % vocabData.length;
+    renderFlashcard();
+}
+
+function prevFlashcard() {
+    currentFlashcardIndex = (currentFlashcardIndex - 1 + vocabData.length) % vocabData.length;
+    renderFlashcard();
+}
+
+/* =====================================================
+   QUIZ SECTION
+   ===================================================== */
+function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function startQuiz() {
+    // Reset state
+    quizScore = 0;
+    currentQuizIndex = 0;
+    selectedOptionIndex = null;
+
+    // Pick random questions
+    quizQuestions = shuffleArray(quizPool).slice(0, QUIZ_LENGTH);
+
+    // Toggle screens
+    document.getElementById('quiz-start').classList.add('hidden');
+    document.getElementById('quiz-result').classList.add('hidden');
+    document.getElementById('quiz-body').classList.remove('hidden');
+
+    document.getElementById('quiz-score').textContent = '0';
+    renderQuestion();
+}
+
+function renderQuestion() {
+    const q = quizQuestions[currentQuizIndex];
+    if (!q) return;
+
+    selectedOptionIndex = null;
+
+    // Progress
+    document.getElementById('quiz-progress-text').textContent =
+        `Pertanyaan ${currentQuizIndex + 1} dari ${quizQuestions.length}`;
+    const progressPct = ((currentQuizIndex + 1) / quizQuestions.length) * 100;
+    document.getElementById('quiz-progress-bar').style.width = `${progressPct}%`;
+
+    // Question
+    document.getElementById('quiz-question').textContent = q.q;
+
+    // Options
+    const optsContainer = document.getElementById('quiz-options');
+    optsContainer.innerHTML = q.opts.map((opt, i) => `
+        <button onclick="selectOption(${i})" data-option="${i}"
+            class="quiz-option px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:border-jpRed hover:bg-red-50 text-left transition-all">
+            <span class="inline-block w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-xs font-bold mr-2 text-center leading-6">${String.fromCharCode(65 + i)}</span>
+            ${opt}
+        </button>
+    `).join('');
+
+    // Disable next
+    document.getElementById('quiz-next-btn').disabled = true;
+}
+
+function selectOption(index) {
+    if (selectedOptionIndex !== null) return; // sudah menjawab
+    selectedOptionIndex = index;
+
+    const q = quizQuestions[currentQuizIndex];
+    const isCorrect = index === q.correct;
+
+    if (isCorrect) {
+        quizScore++;
+        document.getElementById('quiz-score').textContent = quizScore;
+    }
+
+    // Style the options
+    document.querySelectorAll('.quiz-option').forEach((btn, i) => {
+        btn.disabled = true;
+        btn.classList.remove('hover:border-jpRed', 'hover:bg-red-50');
+        if (i === q.correct) {
+            btn.classList.remove('border-slate-200', 'bg-white');
+            btn.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+        } else if (i === index && !isCorrect) {
+            btn.classList.remove('border-slate-200', 'bg-white');
+            btn.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
+        } else {
+            btn.classList.add('opacity-60');
+        }
+    });
+
+    // Enable next
+    document.getElementById('quiz-next-btn').disabled = false;
+
+    // Change button label on last question
+    if (currentQuizIndex === quizQuestions.length - 1) {
+        document.getElementById('quiz-next-btn').innerHTML =
+            'Lihat Hasil <i class="fa-solid fa-flag-checkered ms-1"></i>';
+    }
+}
+
+function nextQuestion() {
+    if (selectedOptionIndex === null) return;
+
+    if (currentQuizIndex < quizQuestions.length - 1) {
+        currentQuizIndex++;
+        document.getElementById('quiz-next-btn').innerHTML =
+            'Pertanyaan Berikutnya <i class="fa-solid fa-chevron-right ms-1"></i>';
+        renderQuestion();
+    } else {
+        showQuizResult();
+    }
+}
+
+function showQuizResult() {
+    document.getElementById('quiz-body').classList.add('hidden');
+    document.getElementById('quiz-result').classList.remove('hidden');
+
+    const resultIcon = document.getElementById('result-icon');
+    const resultTitle = document.getElementById('result-title');
+    const resultDesc = document.getElementById('result-desc');
+    const resultScore = document.getElementById('result-score');
+
+    resultScore.textContent = `${quizScore} / ${quizQuestions.length}`;
+
+    // Reset icon classes
+    resultIcon.className = 'w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto text-3xl sm:text-4xl mb-4';
+
+    const pct = (quizScore / quizQuestions.length) * 100;
+    if (pct === 100) {
+        resultIcon.classList.add('bg-yellow-100', 'text-yellow-500');
+        resultIcon.innerHTML = '<i class="fa-solid fa-crown"></i>';
+        resultTitle.textContent = 'Sempurna! 🎉';
+        resultDesc.textContent = 'Kamu menjawab semua dengan benar. Sugoi!';
+    } else if (pct >= 60) {
+        resultIcon.classList.add('bg-green-100', 'text-green-500');
+        resultIcon.innerHTML = '<i class="fa-solid fa-thumbs-up"></i>';
+        resultTitle.textContent = 'Bagus Sekali!';
+        resultDesc.textContent = 'Terus berlatih untuk hasil yang lebih sempurna.';
+    } else {
+        resultIcon.classList.add('bg-red-100', 'text-jpRed');
+        resultIcon.innerHTML = '<i class="fa-solid fa-book-open"></i>';
+        resultTitle.textContent = 'Jangan Menyerah!';
+        resultDesc.textContent = 'Pelajari kembali tabel kana dan kosakata, lalu coba lagi.';
+    }
+}
+
+/* =====================================================
+   INITIALIZATION
+   ===================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+    renderKanaGrid();
+    filterVocab();
+    renderFlashcard();
+    updateFullscreenIcons();
+});
+</script>
+</body>
+</html>
